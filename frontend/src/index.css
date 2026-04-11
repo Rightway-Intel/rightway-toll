@@ -1,0 +1,29 @@
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black: #000000;
+  --white: #FFFFFF;
+  --gray-100: #F6F6F6;
+  --gray-200: #EBEBEB;
+  --gray-300: #D3D3D3;
+  --gray-400: #9E9E9E;
+  --gray-500: #6B6B6B;
+  --gray-600: #444444;
+  --gray-700: #2D2D2D;
+  --gray-800: #1A1A1A;
+  --gray-900: #111111;
+  --green: #06C167;
+  --red: #E53935;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--gray-900); }
+::-webkit-scrollbar-thumb { background: var(--gray-600); border-radius: 2px; }
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800;900&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap');
