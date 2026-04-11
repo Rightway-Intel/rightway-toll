@@ -6,4 +6,5 @@ public class TollCalculateRequest {
     private String destination;
     private String vehicle;
     private Boolean returnTrip = false;
+    private Boolean avoidTolls = false;
 }

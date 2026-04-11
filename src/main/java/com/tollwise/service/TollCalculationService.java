@@ -18,8 +18,9 @@ public class TollCalculationService {
     private final RestTemplate restTemplate;
     @Value("${google.maps.api.key}")
     private String googleMapsApiKey;
-    public TollCalculateResponse calculate(String origin, String destination, String vehicle, Boolean returnTrip) {
-        String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin + "&destination=" + destination + "&key=" + googleMapsApiKey + "&region=in";
+    public TollCalculateResponse calculate(String origin, String destination, String vehicle, Boolean returnTrip, Boolean avoidTolls) {
+        String avoidParam = (avoidTolls != null && avoidTolls) ? "&avoid=tolls" : "";
+        String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin + "&destination=" + destination + "&key=" + googleMapsApiKey + "&region=in" + avoidParam;
         Map response = restTemplate.getForObject(url, Map.class);
         if (response == null || !"OK".equals(response.get("status"))) throw new RuntimeException("Route not found");
         List<Map> routes = (List<Map>) response.get("routes");
@@ -29,10 +30,11 @@ public class TollCalculationService {
         double distanceKm = ((Number)((Map)leg.get("distance")).get("value")).doubleValue()/1000;
         int durationMin = ((Number)((Map)leg.get("duration")).get("value")).intValue()/60;
         List<double[]> points = PolylineDecoder.decode(polyline);
-        List<PlazaResult> plazas = findPlazasOnRoute(points, vehicle, returnTrip);
+        List<PlazaResult> plazas = (avoidTolls != null && avoidTolls) ? new ArrayList<>() : findPlazasOnRoute(points, vehicle, returnTrip);
         int totalToll = plazas.stream().mapToInt(PlazaResult::getTollInr).sum();
         TollCalculateResponse res = new TollCalculateResponse();
-        res.setOrigin(leg.get("start_address").toString()); res.setDestination(leg.get("end_address").toString());
+        res.setOrigin(leg.get("start_address").toString());
+        res.setDestination(leg.get("end_address").toString());
         res.setVehicle(vehicle); res.setDistanceKm(distanceKm); res.setDurationMin(durationMin);
         res.setReturnTrip(returnTrip); res.setPolyline(polyline); res.setPlazaCount(plazas.size());
         res.setTotalTollInr(totalToll); res.setPlazas(plazas);
@@ -59,7 +61,7 @@ public class TollCalculationService {
                 double dist=GeoUtil.haversine(plaza.getLatitude(),plaza.getLongitude(),proj[0],proj[1]);
                 if (dist<bestDist) { bestDist=dist; double segLen=GeoUtil.haversine(points.get(i)[0],points.get(i)[1],points.get(i+1)[0],points.get(i+1)[1]); bestAlong=cumulative[i]+proj[2]*segLen; }
             }
-            if (bestDist>25.0 || seen.contains(plaza.getId())) continue;
+            if (bestDist>20.0 || seen.contains(plaza.getId())) continue;
             seen.add(plaza.getId());
             int baseToll=getTollByVehicle(plaza,vehicle);
             int toll=returnTrip?(int)Math.round(baseToll*plaza.getReturn24hrMult()):baseToll;
@@ -70,7 +72,16 @@ public class TollCalculationService {
             matched.add(result);
         }
         matched.sort(Comparator.comparingDouble(PlazaResult::getDistAlongRouteKm));
-        return matched;
+        // Remove plazas within 5km of each other (dedup approximate coords)
+        List<PlazaResult> deduped = new ArrayList<>();
+        double lastAlong = -999;
+        for (PlazaResult p : matched) {
+            if (p.getDistAlongRouteKm() - lastAlong >= 5.0) {
+                deduped.add(p);
+                lastAlong = p.getDistAlongRouteKm();
+            }
+        }
+        return deduped;
     }
     private int getTollByVehicle(TollPlaza plaza, String vehicle) {
         return switch(vehicle) {

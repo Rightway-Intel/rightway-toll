@@ -13,6 +13,10 @@ public class TollController {
     private final TollCalculationService tollCalculationService;
     @PostMapping("/calculate")
     public ResponseEntity<TollCalculateResponse> calculate(@RequestBody TollCalculateRequest request) {
-        return ResponseEntity.ok(tollCalculationService.calculate(request.getOrigin(), request.getDestination(), request.getVehicle(), request.getReturnTrip()));
+        return ResponseEntity.ok(tollCalculationService.calculate(
+            request.getOrigin(), request.getDestination(),
+            request.getVehicle(), request.getReturnTrip(),
+            request.getAvoidTolls()
+        ));
     }
 }
