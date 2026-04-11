@@ -90,7 +90,8 @@ public class TollCalculationService {
             if (bestDist>20.0 || seen.contains(plaza.getId())) continue;
             seen.add(plaza.getId());
             int baseToll=getTollByVehicle(plaza,vehicle);
-            int toll=returnTrip?(int)Math.round(baseToll*plaza.getReturn24hrMult()):baseToll;
+            double mult = (plaza.getReturn24hrMult() != null) ? plaza.getReturn24hrMult() : 1.5;
+            int toll=returnTrip?(int)Math.round(baseToll*mult):baseToll;
             PlazaResult result=new PlazaResult();
             result.setId(plaza.getId()); result.setPlazaName(plaza.getPlazaName()); result.setHighwayCode(plaza.getHighwayCode());
             result.setState(plaza.getState()); result.setDistrict(plaza.getDistrict()); result.setLatitude(plaza.getLatitude()); result.setLongitude(plaza.getLongitude());
