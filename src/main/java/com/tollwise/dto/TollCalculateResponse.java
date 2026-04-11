@@ -16,4 +16,5 @@ public class TollCalculateResponse {
     private List<String> states;
     private List<String> highways;
     private Integer avgTollPerPlaza;
+    private Integer routeIndex;
 }
