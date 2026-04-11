@@ -40,14 +40,18 @@ export default function Calculator() {
   const [avoidTolls, setAvoidTolls] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const [routes, setRoutes] = useState([])
 
   const calculate = async () => {
     if (!origin || !destination) return
     setLoading(true)
     try {
       const res = await calculateToll({ origin, destination, vehicle, returnTrip, avoidTolls })
-      setResult(res.data)
+      const routes = Array.isArray(res.data) ? res.data : [res.data]
+      setRoutes(routes)
+      setResult(routes[0])
     } catch {
+      setRoutes([{ ...DEMO_RESULT, origin, destination, returnTrip }])
       setResult({ ...DEMO_RESULT, origin, destination, returnTrip })
     } finally {
       setLoading(false)
@@ -147,6 +151,30 @@ export default function Calculator() {
       </button>
 
       {/* Result */}
+      {routes.length > 1 && (
+        <div style={{display:'flex', gap:8, marginTop:12, marginBottom:4}}>
+          {routes.map((r, i) => (
+            <div key={i} onClick={()=>setResult(r)}
+              style={{
+                flex:1, padding:'10px 12px', borderRadius:10, cursor:'pointer',
+                border: result?.routeIndex===i ? '1px solid white' : '1px solid #2D2D2D',
+                background: result?.routeIndex===i ? '#1A1A1A' : '#0A0A0A',
+                transition:'all 0.15s'
+              }}>
+              <div style={{fontSize:'0.68rem', color:'#6B6B6B', textTransform:'uppercase', letterSpacing:1, marginBottom:4}}>
+                Route {i+1}
+              </div>
+              <div style={{fontFamily:'Barlow Condensed', fontSize:'1.3rem', fontWeight:800, color: result?.routeIndex===i ? 'white' : '#9E9E9E'}}>
+                ₹{r.totalTollInr.toLocaleString()}
+              </div>
+              <div style={{fontSize:'0.7rem', color:'#6B6B6B', marginTop:2}}>
+                {Math.round(r.distanceKm)} km · {Math.floor(r.durationMin/60)}h {r.durationMin%60}m · {r.plazaCount} plazas
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {result && (
         <div style={{marginTop:16, border:'1px solid #1A1A1A', borderRadius:12, overflow:'hidden'}}>
           <div style={{background:'white', color:'black', padding:'1.25rem', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
