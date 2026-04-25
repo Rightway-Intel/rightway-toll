@@ -23,7 +23,7 @@ public class TollCalculationService {
         String avoidParam = (avoidTolls != null && avoidTolls) ? "&avoid=tolls" : "";
         String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin
                 + "&destination=" + destination
-                + "&alternatives=true"
+                + "&alternatives=true&waypoints=via:Agra|via:Nagpur"
                 + "&key=" + googleMapsApiKey
                 + "&region=in" + avoidParam;
 
@@ -92,7 +92,7 @@ public class TollCalculationService {
                 double dist=GeoUtil.haversine(plaza.getLatitude(),plaza.getLongitude(),proj[0],proj[1]);
                 if (dist<bestDist) { bestDist=dist; double segLen=GeoUtil.haversine(points.get(i)[0],points.get(i)[1],points.get(i+1)[0],points.get(i+1)[1]); bestAlong=cumulative[i]+proj[2]*segLen; }
             }
-            if (bestDist>1.0 || seen.contains(plaza.getId())) continue;
+            if (bestDist>2.0 || seen.contains(plaza.getId())) continue;
             seen.add(plaza.getId());
             int baseToll=getTollByVehicle(plaza,vehicle);
             double mult = (plaza.getReturn24hrMult() != null) ? plaza.getReturn24hrMult() : 1.5;
