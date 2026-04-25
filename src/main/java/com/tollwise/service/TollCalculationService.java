@@ -23,7 +23,7 @@ public class TollCalculationService {
         String avoidParam = (avoidTolls != null && avoidTolls) ? "&avoid=tolls" : "";
         String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin
                 + "&destination=" + destination
-                + "&alternatives=true&waypoints=via:Agra|via:Nagpur"
+                + "&alternatives=true"
                 + "&key=" + googleMapsApiKey
                 + "&region=in" + avoidParam;
 
