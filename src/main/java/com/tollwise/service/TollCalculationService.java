@@ -40,7 +40,12 @@ public class TollCalculationService {
             double distanceKm = ((Number)((Map)leg.get("distance")).get("value")).doubleValue()/1000;
             int durationMin = ((Number)((Map)leg.get("duration")).get("value")).intValue()/60;
 
-            List<double[]> points = PolylineDecoder.decode(polyline);
+            List<double[]> points = new ArrayList<>();
+        List<Map> steps = (List<Map>) leg.get("steps");
+        for (Map step : steps) {
+            String stepPoly = ((Map) step.get("polyline")).get("points").toString();
+            points.addAll(PolylineDecoder.decode(stepPoly));
+        }
             List<PlazaResult> plazas = (avoidTolls != null && avoidTolls) ? new ArrayList<>() : findPlazasOnRoute(points, vehicle, returnTrip);
             int totalToll = plazas.stream().mapToInt(PlazaResult::getTollInr).sum();
 
@@ -87,7 +92,7 @@ public class TollCalculationService {
                 double dist=GeoUtil.haversine(plaza.getLatitude(),plaza.getLongitude(),proj[0],proj[1]);
                 if (dist<bestDist) { bestDist=dist; double segLen=GeoUtil.haversine(points.get(i)[0],points.get(i)[1],points.get(i+1)[0],points.get(i+1)[1]); bestAlong=cumulative[i]+proj[2]*segLen; }
             }
-            if (bestDist>20.0 || seen.contains(plaza.getId())) continue;
+            if (bestDist>1.0 || seen.contains(plaza.getId())) continue;
             seen.add(plaza.getId());
             int baseToll=getTollByVehicle(plaza,vehicle);
             double mult = (plaza.getReturn24hrMult() != null) ? plaza.getReturn24hrMult() : 1.5;
@@ -102,7 +107,7 @@ public class TollCalculationService {
         List<PlazaResult> deduped = new ArrayList<>();
         double lastAlong = -999;
         for (PlazaResult p : matched) {
-            if (p.getDistAlongRouteKm() - lastAlong >= 5.0) {
+            if (p.getDistAlongRouteKm() - lastAlong >= 0.5) {
                 deduped.add(p);
                 lastAlong = p.getDistAlongRouteKm();
             }
